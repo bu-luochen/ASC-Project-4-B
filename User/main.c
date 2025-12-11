@@ -36,22 +36,22 @@ MPU6050_DataInitDef Result = {
 KalmanFilter1D X = {
     .Angle_Hat = 0,  
     .P = 1.0,     
-    .Q = 0.001,   
-    .R = 0.05     
+    .Q = 0.006,   
+    .R = 0.1     
 };
 
 KalmanFilter1D Y = {
     .Angle_Hat = 0,  
     .P = 1.0,     
-    .Q = 0.001,   
-    .R = 0.05     
+    .Q = 0.006,   
+    .R = 0.1    
 };
 
 KalmanFilter1D Z = {
     .Angle_Hat = 0,  
     .P = 1.0,     
-    .Q = 0.001,   
-    .R = 0.05     
+    .Q = 0.006,   
+    .R = 0.1    
 };
 MadgwickFilter MF = {
 	.q0 = 1,
@@ -104,12 +104,12 @@ int main ()
 //				OLED_ShowSignedNum(64,32,GY,5,OLED_8X16);
 //				OLED_ShowSignedNum(64,48,GZ,5,OLED_8X16);
 			
-			OLED_ShowFloatNum(0,16,MF.q1,1,3,OLED_8X16);
-			OLED_ShowFloatNum(0,32,MF.q2,1,3,OLED_8X16);
-			OLED_ShowFloatNum(0,48,MF.q3,1,3,OLED_8X16);
+			OLED_ShowFloatNum(0,16,X.Angle_Hat,3,3,OLED_8X16);
+			OLED_ShowFloatNum(0,32,Z.Angle_Hat,3,3,OLED_8X16);
+			OLED_ShowFloatNum(0,48,Y.Angle_Hat,3,3,OLED_8X16);
 			
-			Serial_Printf("@(%.2f)(%.2f)(%.2f)\r\n",X.Angle_Hat,Z.Angle_Hat,Y.Angle_Hat);//23ms
-			//Serial_Printf("%.2f,%.2f,%.2f\r\n",X.Angle_Hat,Z.Angle_Hat,Y.Angle_Hat);//23ms
+			//Serial_Printf("@(%.2f)(%.2f)(%.2f)\r\n",X.Angle_Hat,Z.Angle_Hat,Y.Angle_Hat);//23ms
+			Serial_Printf("%.2f,%.2f,%.2f\r\n",-X.Angle_Hat,Z.Angle_Hat,Y.Angle_Hat);//23ms
 			count = 0;
 			OLED_ShowNum(96,0,time,4,OLED_8X16);//20ms
 			OLED_Update();
@@ -148,11 +148,13 @@ void MPU6050_AngleSolve(void)
 		float gyro[3] = {dX * 3.14159 / 180,dY * 3.14159 / 180,dZ * 3.14159 / 180};
 			
 		float accel[3] = {AX * 9.8 / 2048 ,AY * 9.8 / 2048 ,AZ * 9.8 / 2048};
-	
-		Madgwick_Update(&MF,gyro,accel,dt);
-	
-	
-	
+		
+		if(fabs(GZ) > 1){Madgwick_Update(&MF,gyro,accel,dt);}
+		
+		Yaw = Madgwick_QuatToYaw(&MF) * 180 /3.14159;
+		Pitch = Madgwick_QuatToPitch(&MF) * 180 /3.14159;
+		Roll = Madgwick_QuatToRoll(&MF) * 180 /3.14159;
+		
 //		if(fabs(GZ) > 1){Yaw_g = Yaw + dZ * dt;}
 //		if(fabs(GY) > 1){Pitch_g = Pitch + dY * dt;}
 //		if(fabs(GX) > 1){Roll_g = Roll + dX * dt;} 
@@ -167,9 +169,9 @@ void MPU6050_AngleSolve(void)
 //		Pitch = Pitch_a * rate + Pitch_g * (1 - rate);
 //		Roll = Roll_a * rate + Roll_g * (1 - rate);
 		
-//		KalmanFilter1D_Update(&X,dX,Roll,dt);
-//		KalmanFilter1D_Update(&Y,dY,Pitch,dt);
-//		KalmanFilter1D_Update(&Z,dZ,Yaw,dt);
+		KalmanFilter1D_Update(&X,dX,Roll,dt);
+		KalmanFilter1D_Update(&Y,dY,Pitch,dt);
+		KalmanFilter1D_Update(&Z,dZ,Yaw,dt);
 		
 	
 }

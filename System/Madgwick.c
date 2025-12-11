@@ -2,7 +2,7 @@
 #include "Madgwick.h"
 #include <math.h>
 
-float MADGWICK_BETA = 0.15;
+float MADGWICK_BETA = 0.05;
 
 void Madgwick_Init()
 {
@@ -89,5 +89,21 @@ void Madgwick_Update(MadgwickFilter *mf, float gyro[], float accel[], float dt)
     mf->q1 = q1 * inv_norm;
     mf->q2 = q2 * inv_norm;
     mf->q3 = q3 * inv_norm;
+}
+float Madgwick_QuatToPitch(MadgwickFilter *mf) {
+
+    return atan2f(2.0f*(mf->q0*mf->q1 + mf->q2*mf->q3), 1.0f - 2.0f*(mf->q1*mf->q1 + mf->q2*mf->q2));
+}
+
+
+float Madgwick_QuatToRoll(MadgwickFilter *mf) {
+    
+    return asinf(2.0f*(mf->q0*mf->q2 - mf->q1*mf->q3));
+}
+
+
+float Madgwick_QuatToYaw(MadgwickFilter *mf) {
+    
+    return atan2f(2.0f*(mf->q1*mf->q2 + mf->q0*mf->q3), mf->q0*mf->q0 + mf->q1*mf->q1 - mf->q2*mf->q2 - mf->q3*mf->q3);
 }
 
